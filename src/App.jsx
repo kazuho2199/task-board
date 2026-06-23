@@ -1,15 +1,34 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-let nextId = 1
+const STORAGE_KEY = 'task-board-tasks'
+
+function loadTasks() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    return saved ? JSON.parse(saved) : []
+  } catch {
+    return []
+  }
+}
+
+function nextIdFrom(tasks) {
+  return tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1
+}
 
 export default function App() {
-  const [tasks, setTasks] = useState([])
+  const [tasks, setTasks] = useState(loadTasks)
   const [inputText, setInputText] = useState('')
+  const [nextId, setNextId] = useState(() => nextIdFrom(loadTasks()))
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
+  }, [tasks])
 
   function addTask() {
     const text = inputText.trim()
     if (!text) return
-    setTasks(prev => [...prev, { id: nextId++, text, completed: false }])
+    setTasks(prev => [...prev, { id: nextId, text, completed: false }])
+    setNextId(id => id + 1)
     setInputText('')
   }
 
